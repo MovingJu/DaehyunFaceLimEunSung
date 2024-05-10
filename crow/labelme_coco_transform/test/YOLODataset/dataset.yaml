@@ -1,0 +1,5 @@
+train: C:/Users/USER/PycharmProjects/pythonProject/labelme_coco_transform/test\YOLODataset/images/train/
+val: C:/Users/USER/PycharmProjects/pythonProject/labelme_coco_transform/test\YOLODataset/images/val/
+test: C:/Users/USER/PycharmProjects/pythonProject/labelme_coco_transform/test\YOLODataset/images/test/
+nc: 6
+names: ["daehyun", "hoon", "jingi", "jungahnn", "sungbin", "hyunbin"]
