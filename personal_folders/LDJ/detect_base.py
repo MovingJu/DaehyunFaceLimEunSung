@@ -22,6 +22,3 @@ while cap.isOpened():
   if cv2.waitKey(1) == ord('q'):
     break
 cap.release()
-
-
-
