@@ -11,11 +11,12 @@ while cap.isOpened():
   if not success:
     continue
 
-  results = model(image, conf=0.5)
+  results = model(image, conf=0.3)
 
   for result in results:
     #print(result.boxes.xyxy.tolist(), result.boxes.conf.tolist())
-    print('boxes:', result[0].boxes)
+    # print(result[0].boxes)
+    print('test:', result.boxes.xyxy.tolist())
     result_plotted = results[0].plot()
     cv2.imshow('img', result_plotted)
 
