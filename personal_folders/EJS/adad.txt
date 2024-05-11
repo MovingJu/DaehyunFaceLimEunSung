@@ -1,0 +1,100 @@
+# Load YOLOv8n, train it on COCO128 for 3 epochs and predict an image with it
+from ultralytics import YOLO
+import cv2
+
+humanCount = 0
+idNum = 0
+idDict = {}
+outList = []
+sheepList = []
+cap = cv2.VideoCapture(0)
+model = YOLO('yolov8n.pt')
+imageNum = 0
+
+def is_errorAllow(box1, box2):
+    x1, y1, x2, y2 = box1
+    x3, y3, x4, y4 = box2
+    if(abs(x1 - x3) <= 10) and (abs(y1 - y3) <= 10) and (abs(x2 - x4) <= 10) and (abs(y2 - y4) <= 10):
+        return True
+    return False
+
+def is_inside(id):
+    x1, y1, x2, y2 = idDict.get(id)
+    if(x1 >= 100) and (x2 <= 600) and (y2 >= 300):
+        return False
+    return True
+    
+
+while cap.isOpened():
+    success, image = cap.read()
+    if not success:
+        continue
+
+    results = model(image, conf=0.3)
+    bounding_boxes = result[0].boxes.xyxy.tolist()
+    clslist = result[0].boxes.cls.tolist()
+    clsNumList = []
+    posList = []
+    newPerson = 0
+    for i in range(len(clslist)):
+        posList.append(bounding_boxes[clslist[i]])
+        
+    for i in range(len(clslist)):
+        if(clslist[i] == 0.0):
+            clsNumList.append(i)
+            
+    if(humanCount < len(clsNumList)):
+        for i in range(len(clsNumList)):
+            lidiMatch = False
+            for j in range(len(idDict)):
+                if(lidiMatch == False):
+                    lidiMatch = is_errorAllow(posList[i],idDict.get(j)['Pos'])
+            if(lidiMatch == False):
+                idDict[idNum] = {'Pos' : bounding_boxes[clsNumList[i]]}
+                while(idDict[idNum]):
+                    idNum += 1
+                    
+    if(humanCount > len(clsNumList)):
+        for i in range(len(idDict)):
+            diliMatch = False
+            for j in range(len(clsNumList)):
+                if(diliMatch == False):
+                    diliMatch = is_errorAllow(posList[j],idDict.get(i)['Pos'])
+            if(diliMatch == False):
+                del idDict[i]
+                if i in outList:
+                    outList.remove(i)
+                if i in sheepList:
+                    sheepList.remove(i)
+                idNum = 1
+                
+    for i in range(len(clsNumList)):
+        for j in range(len(idDict)):
+            if(is_errorAllow(posList[i],idDict[j]['Pos'])):
+                idDict[j]['Pos'] = posList[i]
+                
+    humanCount = len(clsNumList)
+    
+    for i in humanCount:
+        if is_inside(idDict[i]['Pos']):
+            if i in outList and i not in sheepList:
+                sheepList.append(i)
+                print("ALERT!")
+                cv2.imwrite('personal_folders/EJS/results/' + str(imageNum) + '.png', results[0].plot())
+        else:
+            if i not in outList:
+                outList.append(i)
+    
+                
+    for result in results:
+        print(result.boxes.xyxy.tolist(), result.boxes.conf.tolist())
+
+        result_plotted = results[0].plot()
+        cv2.imshow('img', result_plotted)
+
+    if cv2.waitKey(1) == ord('q'):
+        break
+cap.release()
+
+
+
