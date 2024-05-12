@@ -73,7 +73,7 @@ while cap.isOpened():
                 sheepList.append(i)
                 print("ALERT!")
                 result_plotter = results[0].plot()
-                cv2.imwrite('./crow/results/' + str(imageNum) + '.png', result_plotter)
+                cv2.imwrite('0.png', result_plotter)
                 imageNum += 1
         else:
             if i not in outList:
