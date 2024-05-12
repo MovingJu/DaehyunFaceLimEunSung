@@ -9,7 +9,7 @@ model = YOLO('yolov8n.pt')
 ex_dic = {}
 ent_person = 0
 
-def replace_values(dict_A, list_B, error=125):
+def replace_values(dict_A, list_B, error=150):
     # A에 있는 키들의 집합
     keys_A = set(dict_A.keys())
     
@@ -29,14 +29,15 @@ def replace_values(dict_A, list_B, error=125):
             else:  # 오차 범위 내에 있으면 해당 값을 대체하고 종료
                 updated_dict_A[key] = value_B
                 break
-        else:  # 오차 범위 내에 없는 경우 새로운 키와 함께 추가
+        else: # 오차 범위 내에 없는 경우 새로운 키와 함께 추가
+          if (value_B[0]+value_B[2])/2 < 380:  
             updated_dict_A[new_key] = value_B
             new_key += 1
     
     return updated_dict_A
 
 
-def update_values(dict_A_b, dict_A, constant, impedence = 200):
+def update_values(dict_A_b, dict_A, constant, boarder = 200):
     for key, value_b in dict_A_b.items():
         # 이전 상태의 밸류 리스트와 현재 상태의 밸류 리스트
         value = dict_A[key]
@@ -49,36 +50,37 @@ def update_values(dict_A_b, dict_A, constant, impedence = 200):
         average = (value[1] + value[3]) / 2
         
         # 이전 상태의 평균값이 20을 넘지 않다가 현재 상태에서 넘게 되면
-        if average_b > impedence and average < impedence:
+        if average_b > boarder and average < boarder:
             # 상수에 1을 더함
             constant += 1
-            print(f"평균값이 20을 넘는 키 {key} 발견! 상수 {constant}에 1을 더하고 리스트에 1을 추가합니다.")
+            # print(f"평균값이 20을 넘는 키 {key} 발견! 상수 {constant}에 1을 더하고 리스트에 1을 추가합니다.")
 
     return constant
 
 while cap.isOpened():
-  success, image = cap.read()
-  if not success:
-    continue
+    success, image = cap.read()
+    if not success:
+        continue
 
-  results = model(image, conf=0.3)
+    results = model(image, conf=0.3)
 
-  for result in results:
-    # print(result.boxes.xyxy.tolist(), result.boxes.conf.tolist())
-    # print(result[0].boxes)
-    # print(result.boxes.xyxy.tolist())
+    for result in results:
+        
+        ex_dic_b = ex_dic
 
-    ex_dic_b = ex_dic
+        ex_dic = replace_values(ex_dic, result.boxes.xyxy.tolist())
 
-    ex_dic = replace_values(ex_dic, result.boxes.xyxy.tolist())
+        ent_person = update_values(ex_dic_b, ex_dic, ent_person)
 
-    ent_person = update_values(ex_dic_b, ex_dic, ent_person)
+        print('test:', ex_dic)
+        result_plotted = results[0].plot()
 
-    print('test:', ex_dic)
-    result_plotted = results[0].plot()
-    cv2.imshow('img', result_plotted)
+        # ent_person 값을 이미지에 표시
+        cv2.putText(result_plotted, f'ent_person: {ent_person}', (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
-  if cv2.waitKey(1) == ord('q'):
-    print(ent_person)
-    break
+        cv2.imshow('img', result_plotted)
+
+    if cv2.waitKey(1) == ord('q'):
+        print(ent_person)
+        break
 cap.release()
