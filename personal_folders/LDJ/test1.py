@@ -1,29 +1,31 @@
-def replace_values(dict_A, list_B, error=3):
-    # A에 있는 키들의 집합
-    keys_A = set(dict_A.keys())
-    
-    # A에 없는 키를 위한 새로운 키 값
-    new_key = max(keys_A) + 1 if keys_A else 1
-    
-    # B의 원소를 하나씩 검사
-    for value_B in list_B:
-        # B의 원소와 A의 각 값 비교
-        for key, value_A in dict_A.items():
-            for i in range(len(value_A)):
-                if abs(value_A[i] - value_B[i]) > error:
-                    break
-            else:  # 오차 범위 내에 있으면 해당 값을 대체하고 종료
-                dict_A[key] = value_B
-                break
-        else:  # 오차 범위 내에 없는 경우 새로운 키와 함께 추가
-            dict_A[new_key] = value_B
-            new_key += 1
+def update_values(dict_A_b, dict_A, constant):
+    for key, value_b in dict_A_b.items():
+        # 이전 상태의 밸류 리스트와 현재 상태의 밸류 리스트
+        value = dict_A[key]
+        
+        # 이전 상태의 평균값 계산
+        average_b = (value_b[1] + value_b[3]) / 2
+        # 현재 상태의 평균값 계산
+        average = (value[1] + value[3]) / 2
+        
+        # 이전 상태의 평균값이 20을 넘지 않다가 현재 상태에서 넘게 되면
+        if average_b < 20 and average > 20:
+            # 밸류 리스트에 1을 추가
+            value.append(1)
+            # 상수에 1을 더함
+            constant += 1
+            print(f"평균값이 20을 넘는 키 {key} 발견! 상수 {constant}에 1을 더하고 리스트에 1을 추가합니다.")
 
-# 예시 딕셔너리와 리스트
-A = {}
-B = [[2, 3, 4, 5], [6, 7, 8, 9], [13, 14, 15, 16], [17,18,19,20]]
+    return constant
 
-# 함수 호출하여 딕셔너리의 값을 리스트로 대체 및 추가
-replace_values(A, B)
+# 예시 딕셔너리 A의 이전 상태
+A_b = {1: [10, 15, 17, 18], 2: [20, 15, 23, 22], 3: [25, 30, 30, 30]}
+# 예시 딕셔너리 A의 현재 상태
+A = {1: [10, 15, 25, 18], 2: [20, 25, 23, 22], 3: [25, 30, 30, 30]}
+# 예시 상수 초기값
+my_constant = 0
 
-print("변경된 딕셔너리 A:", A)
+# 함수 호출하여 평균값이 20을 넘는 경우 상수 업데이트 및 리스트에 1 추가
+my_constant = update_values(A_b, A, my_constant)
+print("업데이트된 상수:", my_constant)
+print("업데이트된 딕셔너리 A:", A)
